@@ -1,0 +1,134 @@
+COMANDOS DO EMULADOR AT (at_emulator.py) - SEMANAS 1 A 7
+==========================================================
+
+NOTAS GERAIS
+- Aceita comandos em MAIUSCULAS ou minusculas (ex.: AT+CSQ ou at+csq).
+- Comandos fora desta lista devolvem: +CME ERROR: 4
+- Antes de introduzir o PIN, a maioria dos comandos de rede/SMS devolve
+  +CME ERROR: 10 (SIM nao pronto).
+- Apos 3 tentativas erradas de PIN, o cartao bloqueia em SIM PUK
+  (+CME ERROR: 12). Desbloqueia com AT+CPIN="00000000","1234" ou AT#RESET.
+- Com AT#FAULT_RATE > 0, qualquer comando que nao comece por "AT#" pode
+  devolver +CMS ERROR: 500 (falha intermitente simulada).
+- PIN correto: 1234.
+
+------------------------------------------------------------
+1. COMANDOS BASICOS
+------------------------------------------------------------
+AT                      Teste de vida. Responde OK.
+ATE0                    Desliga o eco dos comandos.
+ATE1                    Liga o eco dos comandos.
+ATI                     Informacao do modem: fabricante, modelo, estado
+                        atual da maquina de estados e perfil de rede.
+AT+CMEE?                Mostra o formato de erros atual (0, 1 ou 2).
+AT+CMEE=?               Mostra as opcoes suportadas: +CMEE: (0-2).
+AT+CMEE=<n>             Define o formato dos erros (ex.: AT+CMEE=1).
+
+------------------------------------------------------------
+2. SIM E REDE
+------------------------------------------------------------
+AT+CPIN?                Estado do PIN: "+CPIN: SIM PIN" (a pedir PIN),
+                        "+CPIN: SIM PUK" (bloqueado) ou "+CPIN: READY".
+AT+CPIN="1234"          Introduz o PIN. Se correto, inicia a procura de
+                        rede (4 segundos). Se errado: +CME ERROR: 16
+                        (ou +CME ERROR: 12 ao esgotar as 3 tentativas).
+AT+CSQ                  Qualidade do sinal. Varia com o perfil de rede
+                        (LTE: 18; 3G: 14; 2G: 10; NOSERVICE: 99).
+AT+CREG?                Registo na rede: 0,2 = a procurar; 0,1 = registado;
+                        0,0 = sem servico.
+AT+CGREG?               Registo na rede de dados (mesmas respostas do CREG).
+AT+COPS?                Operador atual (ex.: MEO 4G / 3G / 2G).
+AT+COPS=?               Lista de operadores disponiveis (MEO, NOS, Vodafone).
+
+------------------------------------------------------------
+3. CONFIGURACAO DE SMS E MEMORIA
+------------------------------------------------------------
+AT+CPMS?                Mostra a memoria de SMS ativa ("SM" ou "ME"),
+                        mensagens ocupadas e capacidade total (50).
+AT+CPMS=?               Mostra as memorias suportadas ("SM","ME").
+AT+CPMS="SM"            Seleciona a memoria de armazenamento ("SM" ou "ME").
+AT+CMGF?                Mostra o modo de SMS (1 = texto, 0 = PDU).
+AT+CMGF=?               Mostra os modos suportados: +CMGF: (0,1).
+AT+CMGF=1               Ativa o modo texto (aceita 0 ou 1).
+AT+CSCA?                Mostra o centro de servico SMS (SMSC).
+AT+CSCA="+351..."       Altera o centro de servico SMS.
+AT+CNMI?                Mostra a configuracao de notificacoes de SMS.
+AT+CNMI=?               Mostra as faixas validas de notificacao.
+AT+CNMI=2,1,0,0,0       Define as notificacoes (gera +CMTI ao receber SMS).
+
+------------------------------------------------------------
+4. ENVIO, LEITURA E GESTAO DE SMS (requer rede registada)
+------------------------------------------------------------
+AT+CMGS="<numero>"      Inicia o envio de SMS. O modem responde com o
+                        prompt ">". Na interface grafica basta escrever o
+                        texto na barra e carregar em Enter (envia CTRL+Z
+                        automaticamente). Resposta: +CMGS: <mr> e OK.
+AT+CMGL                 Lista todas as mensagens.
+AT+CMGL="ALL"           Lista todas as mensagens.
+AT+CMGL="REC UNREAD"    Lista as mensagens recebidas nao lidas.
+AT+CMGL="REC READ"      Lista as mensagens recebidas ja lidas.
+AT+CMGR=<indice>        Le a mensagem do indice. Se estava "REC UNREAD"
+                        passa a "REC READ".
+AT+CMGD=<indice>        Apaga a mensagem do indice.
+                        Indice inexistente: +CMS ERROR: 321.
+
+------------------------------------------------------------
+5. USSD (requer rede registada)
+------------------------------------------------------------
+AT+CUSD=1,"*#123#"      Consulta de saldo (tambem "*100#", "*111#" e "*#100#").
+                        Responde +CUSD: 0,"Saldo: ...",15
+AT+CUSD=1,"*#999#"      Simula timeout: espera ~1,5 s e devolve
+                        +CME ERROR: 515.
+AT+CUSD=1,"<outro>"     Codigo desconhecido: +CUSD: 2,"Servico USSD nao
+                        disponivel",15
+AT+CUSD=2               Cancela a sessao USSD. Responde OK.
+(Perfil NOSERVICE: +CME ERROR: 515.)
+
+------------------------------------------------------------
+6. EXTENSOES DA SEMANA 6 (comandos AT#)
+------------------------------------------------------------
+AT#PROFILE?             Mostra o perfil de rede atual.
+AT#PROFILE="LTE"        Define o perfil: LTE, 3G, 2G ou NOSERVICE.
+                        Altera as respostas de AT+COPS?, AT+CSQ e AT+CREG?.
+AT#FAULT_RATE?          Mostra a taxa de falhas intermitentes.
+AT#FAULT_RATE=0.4       Define a taxa de falhas (0.0 a 1.0). Com 1.0 todos
+                        os comandos (exceto AT#) falham.
+AT#DELIVERY_REPORT?     Mostra se os relatorios de entrega estao ativos.
+AT#DELIVERY_REPORT=1    Ativa (1) ou desativa (0) o relatorio +CDS apos o
+                        envio de SMS.
+AT#INJECT_SMS="+351...","texto"
+                        Simula a chegada de um SMS da rede. Gera o evento
+                        assincrono +CMTI. Requer rede registada.
+AT#RESET                Repoe o modem ao estado inicial (PIN_REQUIRED).
+
+------------------------------------------------------------
+7. EVENTOS ASSINCRONOS (URCs - enviados pelo modem sem pedido)
+------------------------------------------------------------
++CMTI: "SM",<indice>    Chegou um novo SMS, guardado no indice indicado.
++CDS: 6,<mr>,...        Relatorio de entrega do SMS enviado.
+
+------------------------------------------------------------
+8. CODIGOS DE ERRO
+------------------------------------------------------------
+ERRO                    Significado
++CME ERROR: 3           Operacao nao permitida / argumento invalido.
++CME ERROR: 4           Comando nao suportado.
++CME ERROR: 10          SIM nao pronto / modem nao registado.
++CME ERROR: 12          SIM PUK necessario (3 tentativas de PIN esgotadas).
++CME ERROR: 16          PIN incorreto.
++CME ERROR: 515         USSD nao suportado / timeout.
++CMS ERROR: 321         Indice de mensagem invalido.
++CMS ERROR: 330         Sem cobertura (envio de SMS em NOSERVICE).
++CMS ERROR: 500         Falha intermitente simulada.
+
+------------------------------------------------------------
+9. SEQUENCIA TIPICA DE ARRANQUE
+------------------------------------------------------------
+AT
+AT+CPIN="1234"
+(esperar 4 segundos)
+AT+CREG?                Deve dar +CREG: 0,1
+AT+CMGF=1
+AT+CNMI=2,1,0,0,0
+AT+CSQ
+AT+COPS?

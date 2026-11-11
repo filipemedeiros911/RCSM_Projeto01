@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="880" viewBox="0 0 1360 880">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#334155"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#dc2626"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#16a34a"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#2563eb"/>
+    </marker>
+    <style>
+      .title { font: bold 26px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 15px 'Segoe UI', Arial, sans-serif; fill: #475569; }
+      .state { stroke-width: 2.2; rx: 12; }
+      .state-title { font: bold 16px 'Segoe UI', Arial, sans-serif; fill: #0f172a; text-anchor: middle; }
+      .state-sub { font: 12.5px 'Consolas', monospace; fill: #334155; text-anchor: middle; }
+      .transition { stroke: #334155; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .transition-err { stroke: #dc2626; stroke-width: 2; fill: none; marker-end: url(#arrow-red); }
+      .transition-ok { stroke: #16a34a; stroke-width: 2.2; fill: none; marker-end: url(#arrow-green); }
+      .transition-reset { stroke: #2563eb; stroke-width: 1.8; stroke-dasharray: 6,4; fill: none; marker-end: url(#arrow-blue); }
+      .label { font: 13px 'Segoe UI', Arial, sans-serif; fill: #1e293b; }
+      .label-bold { font: bold 13px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .label-err { font: bold 12.5px 'Segoe UI', Arial, sans-serif; fill: #b91c1c; }
+      .label-ok { font: bold 12.5px 'Segoe UI', Arial, sans-serif; fill: #15803d; }
+      .label-blue { font: bold 12.5px 'Segoe UI', Arial, sans-serif; fill: #1d4ed8; }
+      .box-title { font: bold 14px 'Segoe UI', Arial, sans-serif; fill: #0f172a; }
+      .box-text { font: 12.5px 'Segoe UI', Arial, sans-serif; fill: #334155; }
+      .code { font: 12px 'Consolas', monospace; fill: #0f172a; }
+    </style>
+  </defs>
+
+  <!-- Fundo -->
+  <rect width="1360" height="880" fill="#f8fafc"/>
+
+  <!-- Cabeçalho -->
+  <text x="680" y="38" class="title" text-anchor="middle">Máquina de Estados do Emulador de Modem AT (ModemState — Semanas 1 a 7)</text>
+  <text x="680" y="62" class="subtitle" text-anchor="middle">RSCM 2026/2027 (UTAD) — Implementação em at_emulator.py (com suporte a PUK, Perfis de Rede, Falhas, +CMTI e +CDS)</text>
+
+  <!-- Ponto Inicial [*] -->
+  <circle cx="55" cy="165" r="11" fill="#0f172a"/>
+  <path d="M66 165 L125 165" class="transition"/>
+  <text x="72" y="153" class="label">__init__()</text>
+
+  <!-- 0. ESTADO: BOOT -->
+  <rect x="125" y="125" width="165" height="80" class="state" fill="#dbeafe" stroke="#1d4ed8"/>
+  <text x="207" y="158" class="state-title">0: BOOT</text>
+  <text x="207" y="180" class="state-sub">Inicialização</text>
+
+  <!-- Transição BOOT -> PIN_REQUIRED -->
+  <path d="M290 165 L400 165" class="transition-ok"/>
+  <text x="345" y="153" class="label" text-anchor="middle">arranque</text>
+  <text x="345" y="183" class="label" text-anchor="middle">imediato</text>
+
+  <!-- 1. ESTADO: PIN_REQUIRED -->
+  <rect x="400" y="115" width="240" height="100" class="state" fill="#fef3c7" stroke="#d97706"/>
+  <text x="520" y="145" class="state-title">1: PIN_REQUIRED</text>
+  <text x="520" y="167" class="state-sub">+CPIN: SIM PIN (3 tent.)</text>
+  <text x="520" y="187" class="state-sub">Rede/SMS -&gt; +CME ERROR: 10</text>
+
+  <!-- Auto-loop PIN_REQUIRED (PIN incorreto / consultas) -->
+  <path d="M460 115 C460 62 580 62 580 115" class="transition-err"/>
+  <text x="520" y="55" class="label-err" text-anchor="middle">AT+CPIN="errado" (-1 tent.) -&gt; +CME ERROR: 16</text>
+  <text x="520" y="73" class="label" text-anchor="middle">AT+CPIN? -&gt; +CPIN: SIM PIN</text>
+
+  <!-- Transição PIN_REQUIRED -> SIM_PUK (3 falhas) -->
+  <path d="M640 150 L870 150" class="transition-err"/>
+  <text x="755" y="138" class="label-err" text-anchor="middle">3.ª falha de PIN (tentativas == 0)</text>
+  <text x="755" y="168" class="label-err" text-anchor="middle">-&gt; +CME ERROR: 12</text>
+
+  <!-- 2. ESTADO: SIM_PUK -->
+  <rect x="870" y="115" width="260" height="100" class="state" fill="#fee2e2" stroke="#dc2626"/>
+  <text x="1000" y="145" class="state-title">2: SIM_PUK</text>
+  <text x="1000" y="167" class="state-sub">+CPIN: SIM PUK (Cartão Bloqueado)</text>
+  <text x="1000" y="187" class="state-sub">Rede/SMS -&gt; +CME ERROR: 10</text>
+
+  <!-- Auto-loop SIM_PUK -->
+  <path d="M940 115 C940 65 1060 65 1060 115" class="transition-err"/>
+  <text x="1000" y="60" class="label-err" text-anchor="middle">PUK inválido -&gt; +CME ERROR: 12</text>
+
+  <!-- Transição PIN_REQUIRED -> SIM_READY -->
+  <path d="M520 215 L520 320" class="transition-ok"/>
+  <text x="508" y="265" class="label-ok" text-anchor="end">AT+CPIN="1234" -&gt; OK</text>
+  <text x="508" y="283" class="label" text-anchor="end">(inicia network_search_start)</text>
+
+  <!-- Transição SIM_PUK -> SIM_READY (Desbloqueio PUK) -->
+  <path d="M1000 215 C1000 280 780 300 640 350" class="transition-ok"/>
+  <text x="895" y="268" class="label-ok" text-anchor="middle">AT+CPIN="00000000","1234" -&gt; OK</text>
+  <text x="895" y="285" class="label" text-anchor="middle">(repõe 3 tentativas e inicia timer)</text>
+
+  <!-- 3. ESTADO: SIM_READY -->
+  <rect x="400" y="320" width="240" height="95" class="state" fill="#dcfce7" stroke="#16a34a"/>
+  <text x="520" y="350" class="state-title">3: SIM_READY</text>
+  <text x="520" y="372" class="state-sub">+CPIN: READY | AT+CSQ ativo</text>
+  <text x="520" y="392" class="state-sub">SMS/USSD -&gt; +CME ERROR: 10</text>
+
+  <!-- Transição SIM_READY -> REGISTRATION -->
+  <path d="M640 368 L850 368" class="transition"/>
+  <text x="745" y="346" class="label-bold" text-anchor="middle">t &gt;= 0.35 s ou consulta</text>
+  <text x="745" y="362" class="label" text-anchor="middle">+CREG? / +CGREG? / +COPS? / +CSQ</text>
+
+  <!-- 4. ESTADO: REGISTRATION -->
+  <rect x="850" y="320" width="280" height="95" class="state" fill="#ffedd5" stroke="#ea580c"/>
+  <text x="990" y="350" class="state-title">4: REGISTRATION</text>
+  <text x="990" y="372" class="state-sub">Procura de célula (t &lt; 4.0 s)</text>
+  <text x="990" y="392" class="state-sub">+CREG: 0,2 | +COPS: 0</text>
+
+  <!-- Auto-loop REGISTRATION -->
+  <path d="M1130 348 C1205 348 1205 392 1130 392" class="transition"/>
+  <text x="1195" y="362" class="label">t &lt; 4.0 s:</text>
+  <text x="1195" y="378" class="label">+CREG: 0,2 (searching)</text>
+  <text x="1195" y="394" class="label">SMS -&gt; +CME ERROR: 10</text>
+
+  <!-- Transição Direta SIM_READY -> SMS_STACK_USSD (se comando após 4s) -->
+  <path d="M520 415 C520 495 620 535 730 555" class="transition-ok"/>
+  <text x="485" y="485" class="label-ok" text-anchor="end">comando recebido após t &gt;= 4.0 s</text>
+
+  <!-- Transição REGISTRATION -> SMS_STACK_USSD -->
+  <path d="M990 415 L990 505" class="transition-ok"/>
+  <text x="1002" y="458" class="label-ok">t &gt;= 4.0 s (NETWORK_SEARCH_DELAY)</text>
+  <text x="1002" y="476" class="label">em _atualizar_registo_rede()</text>
+
+  <!-- 5. ESTADO: SMS_STACK_USSD -->
+  <rect x="730" y="505" width="520" height="195" class="state" fill="#bbf7d0" stroke="#15803d"/>
+  <text x="990" y="535" class="state-title">5: SMS_STACK_USSD (Registado e Operacional)</text>
+  <text x="990" y="558" class="state-sub">Rede: +CREG: 0,1 | +CGREG: 0,1 | +COPS: "MEO 4G" (LTE), "3G", "2G"</text>
+  <text x="990" y="578" class="state-sub">Config SMS: AT+CMGF=1, AT+CSCA?/=, AT+CNMI=2,1,0,0,0, AT+CPMS? ("SM"/"ME")</text>
+  <text x="990" y="598" class="state-sub">Operações SMS: AT+CMGS (Prompt '&gt;' + Ctrl+Z/ESC), AT+CMGL, AT+CMGR (UNREAD-&gt;READ), AT+CMGD</text>
+  <text x="990" y="618" class="state-sub">USSD: AT+CUSD=1,"*#123#" (500-3000ms) | "*#999#" -&gt; +CME ERROR: 515</text>
+  <text x="990" y="638" class="state-sub">URCs Assíncronos: +CMTI (novo SMS injetado) e +CDS (relatório de entrega após 1s)</text>
+  <text x="990" y="658" class="state-sub">Extensões S6: AT#PROFILE ("LTE"|"3G"|"2G"|"NOSERVICE"), AT#FAULT_RATE=p, AT#DELIVERY_REPORT</text>
+  <text x="990" y="678" class="state-sub">Telemetria S7: Registo automático CSV/JSON + sumário em default_telemetry.log_event()</text>
+
+  <!-- Transição Global AT#RESET -->
+  <path d="M730 630 L260 630 L260 225 L400 190" class="transition-reset"/>
+  <text x="480" y="620" class="label-blue" text-anchor="middle">AT#RESET (de qualquer estado -&gt; reinicia em PIN_REQUIRED com 3 tentativas)</text>
+
+  <!-- Caixa Sub-Estado de Envio de SMS -->
+  <rect x="60" y="310" width="290" height="275" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="1.8"/>
+  <text x="205" y="335" class="box-title" text-anchor="middle">Sub-estado de Envio SMS (AT+CMGS)</text>
+  <text x="78" y="360" class="box-text">Dentro de <tspan class="code">SMS_STACK_USSD</tspan>:</text>
+  <text x="78" y="384" class="box-text">1. <tspan class="code">AT+CMGS="dest"</tspan>:</text>
+  <text x="92" y="402" class="box-text">• Ativa <tspan class="code">waiting_for_sms_body=True</tspan></text>
+  <text x="92" y="420" class="box-text">• Envia prompt <tspan class="code">&gt; </tspan> ao cliente</text>
+  <text x="78" y="444" class="box-text">2. Receção de bytes no buffer:</text>
+  <text x="92" y="462" class="box-text">• <tspan class="code">Ctrl+Z (0x1A)</tspan>: executa</text>
+  <text x="104" y="480" class="box-text"><tspan class="code">finalizar_envio_sms()</tspan> -&gt; guarda</text>
+  <text x="104" y="498" class="box-text"><tspan class="code">STO SENT</tspan> -&gt; <tspan class="code">+CMGS: &lt;mr&gt; OK</tspan></text>
+  <text x="92" y="518" class="box-text">• <tspan class="code">ESC (0x1B)</tspan>: cancela envio -&gt; <tspan class="code">OK</tspan></text>
+  <text x="92" y="538" class="box-text">• Se <tspan class="code">fault_rate &gt; 0</tspan> (prob. p):</text>
+  <text x="104" y="556" class="box-text">devolve <tspan class="code">+CMS ERROR: 500</tspan></text>
+
+  <!-- Rodapé de Notas Técnicas -->
+  <rect x="60" y="735" width="1240" height="115" rx="10" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="82" y="762" class="box-title">Notas de Funcionamento do Emulador (at_emulator.py):</text>
+  <text x="82" y="785" class="box-text">• Comandos básicos e de configuração (<tspan class="code">AT, ATE0/1, ATI, AT+CMEE, AT+CMGF, AT+CSCA, AT+CNMI, AT#RESET</tspan>) respondem em qualquer estado.</text>
+  <text x="82" y="807" class="box-text">• A transição temporizada <tspan class="code">SIM_READY -&gt; REGISTRATION (0.35s) -&gt; SMS_STACK_USSD (4.0s)</tspan> é avaliada em <tspan class="code">_atualizar_registo_rede()</tspan> a cada comando ou injeção.</text>
+  <text x="82" y="829" class="box-text">• No perfil <tspan class="code">AT#PROFILE="NOSERVICE"</tspan>, o estado mantém-se em <tspan class="code">SMS_STACK_USSD</tspan>, mas simula perda de cobertura (<tspan class="code">+CREG: 0,0</tspan>, <tspan class="code">+CSQ: 99,99</tspan> e <tspan class="code">+CMS ERROR: 330</tspan>).</text>
+</svg>

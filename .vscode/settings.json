@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^python -m py_compile '\\.\\\\at_emulator\\.py'$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
